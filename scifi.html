@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sci-Fi Movies | CineVerse</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #dc2626;
+            --primary-dark: #b91c1c;
+            --dark: #111827;
+            --darker: #0a0e1a;
+            --light: #f3f4f6;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark);
+            color: white;
+            scroll-behavior: smooth;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        .movie-card {
+            transition: all 0.3s ease;
+            transform-origin: center bottom;
+        }
+        
+        .movie-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--darker);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+        
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-content p {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-black py-4 px-6 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-2xl font-bold text-red-600 flex items-center">
+                <i class="fas fa-film mr-2"></i>CineVerse
+            </a>
+            
+            <div class="hidden md:flex space-x-6">
+                <a href="index.html" class="nav-link hover:text-red-500 transition">Home</a>
+                <a href="action.html" class="nav-link hover:text-red-500 transition">Action</a>
+                <a href="comedy.html" class="nav-link hover:text-red-500 transition">Comedy</a>
+                <a href="scifi.html" class="nav-link text-red-500 transition">Sci-Fi</a>
+                <a href="horror.html" class="nav-link hover:text-red-500 transition">Horror</a>
+                <a href="about.html" class="nav-link hover:text-red-500 transition">About Us</a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="search-btn" class="text-white hover:text-red-500 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="theme-toggle" class="text-white hover:text-red-500 transition">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button id="mobile-menu-btn" class="md:hidden text-white">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Search Bar -->
+    <div id="search-bar" class="hidden bg-gray-800 py-4 px-6 shadow-lg">
+        <div class="container mx-auto flex">
+            <input type="text" id="search-input" placeholder="Search movies..." 
+                   class="flex-grow bg-gray-700 text-white px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-red-500">
+            <button id="search-submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-r-lg transition">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div id="search-results" class="container mx-auto mt-4 hidden bg-gray-700 rounded-lg p-4 max-h-80 overflow-y-auto"></div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden md:hidden bg-black py-4 px-6 absolute w-full z-40 shadow-lg">
+        <div class="container mx-auto flex flex-col space-y-4">
+            <a href="index.html" class="nav-link hover:text-red-500 transition">Home</a>
+            <a href="action.html" class="nav-link hover:text-red-500 transition">Action</a>
+            <a href="comedy.html" class="nav-link hover:text-red-500 transition">Comedy</a>
+            <a href="scifi.html" class="nav-link text-red-500 transition">Sci-Fi</a>
+            <a href="horror.html" class="nav-link hover:text-red-500 transition">Horror</a>
+            <a href="about.html" class="nav-link hover:text-red-500 transition">About Us</a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero flex-grow flex items-center justify-center text-center py-20">
+        <div class="container mx-auto px-6">
+            <div class="hero-content max-w-3xl mx-auto">
+                <h1 class="text-4xl md:text-5xl font-bold mb-6 animate-fadeIn">Sci-Fi Movies</h1>
+                <p class="text-xl md:text-2xl mb-8 text-gray-300 animate-fadeIn delay-100">
+                    Explore the wonders of the universe and beyond
+                </p>
+                <a href="#scifi-movies" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-lg text-lg transition transform hover:scale-105 animate-fadeIn delay-200 inline-block">
+                    Explore Sci-Fi
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <!-- Sci-Fi Movies -->
+        <section id="scifi-movies" class="py-16 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <h2 class="text-3xl font-bold mb-12 text-center">Popular Sci-Fi Movies</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8" id="scifi-movies-grid">
+                    <!-- Loading indicator -->
+                    <div class="col-span-4 flex justify-center py-12">
+                        <div class="loader"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="py-16 bg-gray-800">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <div class="bg-gray-700 rounded-xl p-8 shadow-lg transform transition hover:scale-[1.01]">
+                    <h2 class="text-2xl font-bold mb-4">Stay Updated on New Releases</h2>
+                    <p class="mb-6 text-gray-300">
+                        Subscribe to get the latest sci-fi movie releases and recommendations
+                    </p>
+                    <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4">
+                        <input type="email" id="newsletter-email" placeholder="Your email address" 
+                               class="flex-grow bg-gray-600 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" required>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                            Subscribe
+                        </button>
+                    </form>
+                    <div id="newsletter-message" class="mt-4 hidden"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Movie Modal -->
+    <div id="movie-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700 sticky top-0 bg-gray-800 z-10">
+                <h3 id="modal-title" class="text-xl font-bold"></h3>
+                <button id="close-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/3">
+                        <img id="modal-poster" src="" alt="Movie Poster" class="w-full rounded-lg shadow-lg">
+                    </div>
+                    <div class="md:w-2/3">
+                        <div class="flex items-center mb-4">
+                            <div id="modal-rating" class="text-yellow-400 mr-4"></div>
+                            <span id="modal-year" class="text-gray-400"></span>
+                            <span id="modal-runtime" class="text-gray-400 ml-4"></span>
+                        </div>
+                        <div class="mb-4">
+                            <span id="modal-genre" class="inline-block bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold mr-2 mb-2"></span>
+                        </div>
+                        <p id="modal-plot" class="mb-4 text-gray-300"></p>
+                        <div class="mb-4">
+                            <h4 class="font-bold mb-2">Director:</h4>
+                            <p id="modal-director" class="text-gray-300"></p>
+                        </div>
+                        <div class="mb-6">
+                            <h4 class="font-bold mb-2">Cast:</h4>
+                            <p id="modal-cast" class="text-gray-300"></p>
+                        </div>
+                        <button id="watch-now-btn" class="bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-lg font-semibold transition w-full md:w-auto">
+                            <i class="fas fa-play mr-2"></i>Watch Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div class="mb-8 md:mb-0">
+                    <h3 class="text-2xl font-bold text-red-600 mb-4 flex items-center">
+                        <i class="fas fa-film mr-2"></i>CineVerse
+                    </h3>
+                    <p class="text-gray-400 max-w-md">
+                        Your ultimate destination for futuristic movie entertainment.
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                        <ul class="space-y-2">
+                            <li><a href="index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
+                            <li><a href="action.html" class="text-gray-400 hover:text-white transition">Action</a></li>
+                            <li><a href="comedy.html" class="text-gray-400 hover:text-white transition">Comedy</a></li>
+                            </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4">More</h4>
+                        <ul class="space-y-2">
+                            <li><a href="scifi.html" class="text-red-500 hover:text-red-400 transition">Sci-Fi</a></li>
+                            <li><a href="horror.html" class="text-gray-400 hover:text-white transition">Horror</a></li>
+                            <li><a href="about.html" class="text-gray-400 hover:text-white transition">About Us</a></li>
+                        
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
+                <p>&copy; <span id="current-year"></span> CineVerse. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const searchBtn = document.getElementById('search-btn');
+        const searchBar = document.getElementById('search-bar');
+        const searchInput = document.getElementById('search-input');
+        const searchSubmit = document.getElementById('search-submit');
+        const searchResults = document.getElementById('search-results');
+        const themeToggle = document.getElementById('theme-toggle');
+        const newsletterForm = document.getElementById('newsletter-form');
+        const newsletterMessage = document.getElementById('newsletter-message');
+        const movieModal = document.getElementById('movie-modal');
+        const closeModal = document.getElementById('close-modal');
+        const scifiMoviesContainer = document.getElementById('scifi-movies-grid');
+        
+        // Modal Elements
+        const modalTitle = document.getElementById('modal-title');
+        const modalPoster = document.getElementById('modal-poster');
+        const modalRating = document.getElementById('modal-rating');
+        const modalYear = document.getElementById('modal-year');
+        const modalRuntime = document.getElementById('modal-runtime');
+        const modalGenre = document.getElementById('modal-genre');
+        const modalPlot = document.getElementById('modal-plot');
+        const modalDirector = document.getElementById('modal-director');
+        const modalCast = document.getElementById('modal-cast');
+        const watchNowBtn = document.getElementById('watch-now-btn');
+        
+        // Sci-Fi Movie Data
+        const scifiMovies = [
+            {
+                id: 1,
+                title: "Interstellar",
+                poster: "https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg",
+                rating: 8.6,
+                year: "2014",
+                runtime: "169 min",
+                genre: "Sci-Fi, Adventure, Drama",
+                plot: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival.",
+                director: "Christopher Nolan",
+                cast: ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain", "Michael Caine"]
+            },
+            {
+                id: 2,
+                title: "Blade Runner 2049",
+                poster: "https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_.jpg",
+                rating: 8.0,
+                year: "2017",
+                runtime: "164 min",
+                genre: "Sci-Fi, Drama, Mystery",
+                plot: "A young blade runner's discovery of a long-buried secret leads him to track down former blade runner Rick Deckard.",
+                director: "Denis Villeneuve",
+                cast: ["Ryan Gosling", "Harrison Ford", "Ana de Armas", "Jared Leto"]
+            },
+            {
+                id: 3,
+                title: "The Matrix",
+                poster: "https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc4L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_.jpg",
+                rating: 8.7,
+                year: "1999",
+                runtime: "136 min",
+                genre: "Sci-Fi, Action",
+                plot: "A computer hacker learns about the true nature of reality and his role in the war against its controllers.",
+                director: "Lana Wachowski, Lilly Wachowski",
+                cast: ["Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving"]
+            },
+            {
+                id: 4,
+    "title": "Annihilation",
+    "poster": "https://m.media-amazon.com/images/M/MV5BMTk2Mjc2NzYxNl5BMl5BanBnXkFtZTgwMTA2OTA1NDM@._V1_FMjpg_UX1000_.jpg",
+    "rating": 6.8,
+    "year": "2018",
+    "runtime": "115 min",
+    "genre": "Sci-Fi, Horror, Mystery",
+    "plot": "A biologist signs up for a dangerous, secret expedition into a mysterious zone where the laws of nature don't apply.",
+    "director": "Alex Garland",
+    "cast": ["Natalie Portman", "Jennifer Jason Leigh", "Tessa Thompson", "Oscar Isaac"]
+            },
+            {
+                id: 5,
+                title: "Inception",
+                poster: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg",
+                rating: 8.8,
+                year: "2010",
+                runtime: "148 min",
+                genre: "Sci-Fi, Action, Adventure",
+                plot: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into a target's mind.",
+                director: "Christopher Nolan",
+                cast: ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page", "Tom Hardy"]
+            },
+            {
+                id: 6,
+                title: "Dune",
+                poster: "https://m.media-amazon.com/images/M/MV5BN2FjNmEyNWMtYzM0ZS00NjIyLTg5YzYtYThlMGVjNzE1OGViXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_FMjpg_UX1000_.jpg",
+                rating: 8.0,
+                year: "2021",
+                runtime: "155 min",
+                genre: "Sci-Fi, Adventure",
+                plot: "Feature adaptation of Frank Herbert's science fiction novel about the son of a noble family entrusted with the protection of the most valuable asset in the galaxy.",
+                director: "Denis Villeneuve",
+                cast: ["Timothée Chalamet", "Rebecca Ferguson", "Zendaya", "Oscar Isaac"]
+            },
+            {
+                id: 7,
+                title: "The Martian",
+                poster: "https://m.media-amazon.com/images/M/MV5BMTc2MTQ3MDA1Nl5BMl5BanBnXkFtZTgwODA3OTI4NjE@._V1_.jpg",
+                rating: 8.0,
+                year: "2015",
+                runtime: "144 min",
+                genre: "Sci-Fi, Adventure, Drama",
+                plot: "An astronaut becomes stranded on Mars after his team assume him dead, and must rely on his ingenuity to find a way to signal to Earth that he is alive.",
+                director: "Ridley Scott",
+                cast: ["Matt Damon", "Jessica Chastain", "Kristen Wiig", "Jeff Daniels"]
+            },
+            {
+                id: 8,
+                title: "Ex Machina",
+                poster: "https://m.media-amazon.com/images/M/MV5BMTUxNzc0OTIxMV5BMl5BanBnXkFtZTgwNDI3NzU2NDE@._V1_.jpg",
+                rating: 7.7,
+                year: "2014",
+                runtime: "108 min",
+                genre: "Sci-Fi, Drama, Thriller",
+                plot: "A young programmer is selected to participate in a ground-breaking experiment in synthetic intelligence by evaluating the human qualities of a highly advanced humanoid A.I.",
+                director: "Alex Garland",
+                cast: ["Alicia Vikander", "Domhnall Gleeson", "Oscar Isaac", "Sonoya Mizuno"]
+            }
+        ];
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('current-year').textContent = new Date().getFullYear();
+            loadSciFiMovies();
+            checkThemePreference();
+            initEventListeners();
+        });
+
+        // Event Listeners
+        function initEventListeners() {
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            searchBtn.addEventListener('click', toggleSearchBar);
+            searchSubmit.addEventListener('click', performSearch);
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') performSearch();
+            });
+            themeToggle.addEventListener('click', toggleTheme);
+            newsletterForm.addEventListener('submit', handleNewsletterSubmit);
+            closeModal.addEventListener('click', closeMovieModal);
+            movieModal.addEventListener('click', function(e) {
+                if (e.target === movieModal) closeMovieModal();
+            });
+            watchNowBtn.addEventListener('click', function() {
+                alert('This would redirect to the streaming service in a real implementation.');
+            });
+        }
+
+        // Mobile Menu Functions
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+            searchBar.classList.add('hidden');
+            const icon = mobileMenuBtn.querySelector('i');
+            if (mobileMenu.classList.contains('hidden')) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            } else {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            }
+        }
+
+        // Search Functions
+        function toggleSearchBar() {
+            searchBar.classList.toggle('hidden');
+            mobileMenu.classList.add('hidden');
+            searchResults.classList.add('hidden');
+            searchInput.value = '';
+            if (!searchBar.classList.contains('hidden')) searchInput.focus();
+        }
+
+        function performSearch() {
+            const query = searchInput.value.trim().toLowerCase();
+            if (query.length < 2) {
+                searchResults.innerHTML = '<p class="text-gray-300">Please enter at least 2 characters</p>';
+                searchResults.classList.remove('hidden');
+                return;
+            }
+            
+            const results = scifiMovies.filter(movie => 
+                movie.title.toLowerCase().includes(query) || 
+                movie.genre.toLowerCase().includes(query) ||
+                movie.director.toLowerCase().includes(query) ||
+                movie.cast.some(actor => actor.toLowerCase().includes(query))
+            ).slice(0, 5);
+            
+            displaySearchResults(results);
+        }
+
+        function displaySearchResults(results) {
+            if (results.length === 0) {
+                searchResults.innerHTML = '<p class="text-gray-300">No results found</p>';
+            } else {
+                searchResults.innerHTML = results.map(movie => `
+                    <div class="p-3 hover:bg-gray-600 rounded-lg cursor-pointer search-result" data-id="${movie.id}">
+                        <div class="flex items-center">
+                            <img src="${movie.poster}" alt="${movie.title}" class="w-12 h-16 object-cover rounded mr-3">
+                            <div>
+                                <h4 class="font-semibold">${movie.title}</h4>
+                                <p class="text-sm text-gray-300">${movie.year} • ${movie.genre.split(',')[0]}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            searchResults.classList.remove('hidden');
+            
+            document.querySelectorAll('.search-result').forEach(result => {
+                result.addEventListener('click', function() {
+                    const movieId = parseInt(this.getAttribute('data-id'));
+                    const movie = scifiMovies.find(m => m.id === movieId);
+                    if (movie) {
+                        openMovieModal(movie);
+                        searchBar.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // Theme Functions
+        function toggleTheme() {
+            document.body.classList.toggle('bg-gray-900');
+            document.body.classList.toggle('bg-gray-100');
+            document.body.classList.toggle('text-white');
+            document.body.classList.toggle('text-gray-900');
+            
+            const icon = themeToggle.querySelector('i');
+            if (icon.classList.contains('fa-moon')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+            
+            localStorage.setItem('darkMode', document.body.classList.contains('bg-gray-900'));
+        }
+
+        function checkThemePreference() {
+            if (localStorage.getItem('darkMode') === 'false') {
+                document.body.classList.remove('bg-gray-900');
+                document.body.classList.add('bg-gray-100', 'text-gray-900');
+                themeToggle.querySelector('i').classList.remove('fa-moon');
+                themeToggle.querySelector('i').classList.add('fa-sun');
+            }
+        }
+
+        // Newsletter Functions
+        function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email').value;
+            
+            if (!validateEmail(email)) {
+                showNewsletterMessage('Please enter a valid email address', 'text-red-500');
+                return;
+            }
+            
+            setTimeout(() => {
+                newsletterForm.reset();
+                showNewsletterMessage('Thank you for subscribing!', 'text-green-500');
+            }, 1000);
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function showNewsletterMessage(message, colorClass) {
+            newsletterMessage.textContent = message;
+            newsletterMessage.className = `mt-4 ${colorClass}`;
+            newsletterMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                newsletterMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Movie Functions
+        function loadSciFiMovies() {
+            setTimeout(() => {
+                scifiMoviesContainer.innerHTML = '';
+                
+                scifiMovies.forEach(movie => {
+                    const movieCard = document.createElement('div');
+                    movieCard.className = 'movie-card bg-gray-800 rounded-lg overflow-hidden shadow-lg';
+                    movieCard.innerHTML = `
+                        <img src="${movie.poster}" alt="${movie.title}" class="w-full h-64 md:h-80 object-cover">
+                        <div class="p-4">
+                            <h3 class="text-xl font-semibold mb-2">${movie.title}</h3>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-yellow-400">${generateStarRating(movie.rating)}</span>
+                                <span class="text-gray-400">${movie.year}</span>
+                            </div>
+                            <button class="view-details text-red-500 hover:text-red-400 font-medium transition" data-id="${movie.id}">
+                                View Details
+                            </button>
+                        </div>
+                    `;
+                    scifiMoviesContainer.appendChild(movieCard);
+                });
+                
+                document.querySelectorAll('.view-details').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const movieId = parseInt(this.getAttribute('data-id'));
+                        const movie = scifiMovies.find(m => m.id === movieId);
+                        if (movie) openMovieModal(movie);
+                    });
+                });
+            }, 800);
+        }
+
+        function generateStarRating(rating) {
+            const stars = Math.round(rating / 2);
+            let starsHTML = '';
+            for (let i = 0; i < 5; i++) {
+                starsHTML += i < stars ? '★' : '☆';
+            }
+            return starsHTML;
+        }
+
+        function openMovieModal(movie) {
+            modalTitle.textContent = movie.title;
+            modalPoster.src = movie.poster;
+            modalPoster.alt = `${movie.title} Poster`;
+            
+            modalRating.innerHTML = '';
+            const rating = Math.round(movie.rating / 2);
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('i');
+                star.className = i < rating ? 'fas fa-star' : 'far fa-star';
+                modalRating.appendChild(star);
+            }
+            
+            modalYear.textContent = movie.year;
+            modalRuntime.textContent = movie.runtime;
+            modalGenre.textContent = movie.genre;
+            modalPlot.textContent = movie.plot;
+            modalDirector.textContent = movie.director;
+            modalCast.textContent = movie.cast.join(', ');
+            
+            movieModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMovieModal() {
+            movieModal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
